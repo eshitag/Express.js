@@ -1,16 +1,54 @@
 import express from "express";
-const port = 3000;
+const port = 5001;
 const app = express();
 
 //in-built middleware
 app.use(express.json());
 
 //cutsom middleware
-const myLogger = (req, res, next) => {
-  console.log(`${req.method} ${req.url}`);
-  next();
+// const myLogger = (req, res, next) => {
+//   console.log(`${req.method} ${req.url}`);
+//   next();
+// };
+// app.use(myLogger);
+
+const urgencyLanguageCheck = (message) => {
+  const urgencyWords = ["now", "urgent", "blocked", "immediately"];
+  const lowerMessage = message.toLowerCase();
+  for (let word of urgencyWords) {
+    if (lowerMessage.includes(word)) {
+      return { score: 30, reasons: ["urgent language detected"] };
+    }
+  }
+
+  return {
+    score: 0,
+    reasons: [],
+  };
 };
-app.use(myLogger);
+
+const symbolSubstitutionCheck = (message) => {
+  const suspiciousSymbols = ["0", "1", "@", "$"];
+  const words = message.split(" ");
+
+  for (let word of words) {
+    let hasLetter = false;
+    let hasSymbol = false;
+
+    for (let char of word) {
+      if (/[a-zA-Z]/.test(char)) hasLetter = true;
+      if (suspiciousSymbols.includes(char)) hasSymbol = true;
+    }
+    if (hasLetter && hasSymbol) {
+      return {
+        score: 40,
+        reasons: ["symbol substitution detected"],
+      };
+    }
+  }
+
+  return { score: 0, reasons: [] };
+};
 
 //Route
 app.post("/analyze", (req, res) => {
@@ -19,24 +57,22 @@ app.post("/analyze", (req, res) => {
   if (!message) {
     return res.status(400).json({ error: "Message is required" });
   }
+  const check1 = symbolSubstitutionCheck(message);
+  const check2 = urgencyLanguageCheck(message);
 
-  const isFraudMessage = (str) => {
-    const suspiciousSymbols = ["0", "1", "@", "$"];
-    for (let char of text) {
-      if (suspiciousSymbols.includes(char)) {
-        return true;
-      }
-    }
-    return false;
-  };
+  const fraudScore = check1.score + check2.score;
+  const reasons = [...check1.reasons, ...check2.reasons];
 
-  const fraudIndicators = [];
+  let fraudLevel = "low";
+  if (fraudScore > 30 && fraudScore <= 70) fraudLevel = "medium";
+  if (fraudScore > 70) fraudLevel = "high";
 
-  if (isFraudMessage(message)) {
-    fraudIndicators.push("symbol subsitution detected");
-  }
-
-  res.json({ message, fraudIndicators });
+  res.json({
+    message,
+    fraudScore,
+    fraudLevel,
+    reasons,
+  });
 });
 
 //Health check
