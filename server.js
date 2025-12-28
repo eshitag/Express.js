@@ -1,17 +1,16 @@
 import express from "express";
 const port = 5001;
 const app = express();
-
-//in-built middleware
+//Middleware
 app.use(express.json());
-
-//cutsom middleware
-// const myLogger = (req, res, next) => {
-//   console.log(`${req.method} ${req.url}`);
-//   next();
-// };
-// app.use(myLogger);
-
+const myLogger = (req, res, next) => {
+  console.log(`${req.method} ${req.url}`);
+  next();
+};
+app.use(myLogger);
+// ----------------------
+// FRAUD RULE FUNCTIONS
+// ----------------------
 const urgencyLanguageCheck = (message) => {
   const urgencyWords = ["now", "urgent", "blocked", "immediately"];
   const lowerMessage = message.toLowerCase();
@@ -50,6 +49,53 @@ const symbolSubstitutionCheck = (message) => {
   return { score: 0, reasons: [] };
 };
 
+const otpCheck = (message) => {
+  const otpWords = ["otp", "verify with code", "enter pin", "confirm identity"];
+  const lowerMessage = message.toLowerCase();
+
+  for (let phrase of otpWords) {
+    if (lowerMessage.includes(phrase)) {
+      return { score: 30, reasons: ["OTP or verification requested"] };
+    }
+  }
+
+  return { score: 0, reasons: [] };
+};
+
+const personalInfoCheck = (message) => {
+  const infoWords = [
+    "send your phone number",
+    "account number",
+    "your email",
+    "credentials",
+  ];
+  const lowerMessage = message.toLowerCase();
+
+  for (let phrase of infoWords) {
+    if (lowerMessage.includes(phrase)) {
+      return { score: 30, reasons: ["request for personal information"] };
+    }
+  }
+
+  return { score: 0, reasons: [] };
+};
+
+const deliveryCheck = (message) => {
+  const deliveryWords = [
+    "confirm delivery",
+    "track your package",
+    "sign for delivery",
+  ];
+  const lowerMessage = message.toLowerCase();
+
+  for (let phrase of deliveryWords) {
+    if (lowerMessage.includes(phrase)) {
+      return { score: 20, reasons: ["delivery confirmation request"] };
+    }
+  }
+
+  return { score: 0, reasons: [] };
+};
 //Route
 app.post("/analyze", (req, res) => {
   const { message } = req.body;
@@ -57,12 +103,21 @@ app.post("/analyze", (req, res) => {
   if (!message) {
     return res.status(400).json({ error: "Message is required" });
   }
-  const check1 = symbolSubstitutionCheck(message);
-  const check2 = urgencyLanguageCheck(message);
 
-  const fraudScore = check1.score + check2.score;
-  const reasons = [...check1.reasons, ...check2.reasons];
+  //Run all checks
+  const checks = [
+    symbolSubstitutionCheck(message),
+    urgencyLanguageCheck(message),
+    otpCheck(message),
+    personalInfoCheck(message),
+    deliveryCheck(message),
+  ];
 
+  // Aggregate results
+  const fraudScore = checks.reduce((sum, c) => sum + c.score, 0);
+  const reasons = checks.flatMap((c) => c.reasons);
+
+  // Determine fraud level
   let fraudLevel = "low";
   if (fraudScore > 30 && fraudScore <= 70) fraudLevel = "medium";
   if (fraudScore > 70) fraudLevel = "high";
