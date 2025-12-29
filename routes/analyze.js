@@ -6,13 +6,16 @@ import {
   otpCheck,
   personalInfoCheck,
   deliveryCheck,
+  impersonationCheck,
+  financialPressureCheck,
 } from "../utils/fraudRules.js";
 
 const analyzeRouter = express.Router();
 
 //Route
-analyzeRouter.post("/", async (req, res) => {
+analyzeRouter.post("/analyze", async (req, res) => {
   const { message } = req.body;
+  console.log("Received message:", message);
 
   if (!message) {
     return res.status(400).json({ error: "Message is required" });
@@ -25,6 +28,8 @@ analyzeRouter.post("/", async (req, res) => {
     otpCheck(message),
     personalInfoCheck(message),
     deliveryCheck(message),
+    financialPressureCheck(message),
+    impersonationCheck(message),
   ];
 
   // Aggregate results

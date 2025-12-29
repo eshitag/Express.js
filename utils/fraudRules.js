@@ -86,3 +86,25 @@ export const deliveryCheck = (message) => {
 
   return { score: 0, reasons: [] };
 };
+
+export const financialPressureCheck = (message) => {
+  const phrases = ["pay now", "limited time", "penalty", "late fee"];
+  const lowerMessage = message.toLowerCase();
+  for (let phrase of phrases) {
+    if (lowerMessage.includes(phrase)) {
+      return { score: 30, reasons: ["financial pressure detected"] };
+    }
+  }
+  return { score: 0, reasons: [] };
+};
+
+export const impersonationCheck = (message) => {
+  const brands = ["paypal", "amazon", "bank", "irs", "cra"];
+  const lowerMessage = message.toLowerCase();
+  for (let brand of brands) {
+    if (lowerMessage.includes(brand) && lowerMessage.includes("account")) {
+      return { score: 30, reasons: ["possible brand impersonation"] };
+    }
+  }
+  return { score: 0, reasons: [] };
+};

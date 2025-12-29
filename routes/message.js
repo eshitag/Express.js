@@ -4,9 +4,9 @@ import Message from "../models/Message.js";
 const messageRouter = express.Router();
 
 //Get Messages API
-messageRouter.get("/", async (req, res) => {
+messageRouter.get("/messages", async (req, res) => {
   try {
-    const message = await Message.find().sort({ createdAt: -1 });
+    const message = await Message.find();
     res.json(message);
   } catch (err) {
     console.error(err);

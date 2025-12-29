@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fraud Text Analyzer</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+
+</head>
+<body class="bg-gray-100 min-h-screen flex flex-col items-center justify-start py-10">
+    <h1 class="text-3xl font-bold mb-6 text-blue-700">Fraud Text Analyzer</h1>
+    <div class="w-full max-w-xl bg-white p-6 rounded-lg shadow-md">
+        <textarea id="msg" rows="5" cols="50" placeholder="Enter message" class="w-full p-3 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 mb-4"></textarea>
+        <button onclick="analyze()" class="w-full bg-blue-600 text-white py-2 rounded-md hover:bg-blue-700 transition-colors mb-4">Analyze</button>
+
+        <h2 class="text-xl font-semibold mb-2">Result:</h2>
+        <pre id="result" class="bg-gray-100 p-3 rounded-md border border-gray-200 overflow-x-auto"></pre>
+    </div>
+
+    <!-- Stored Messages Table -->
+<div class="w-full max-w-4xl bg-white p-6 rounded-lg shadow-md mt-6">
+  <h2 class="text-2xl font-bold mb-4 text-blue-700">Stored Messages</h2>
+
+  <button onclick="fetchMessages()" 
+    class="mb-4 bg-green-600 text-white py-2 px-4 rounded-md hover:bg-green-700 transition-colors">
+    Fetch Stored Messages
+  </button>
+
+  <table class="min-w-full border border-gray-200">
+    <thead class="bg-gray-200">
+      <tr>
+        <th class="border px-4 py-2 text-left">Message</th>
+        <th class="border px-4 py-2 text-left">Fraud Score</th>
+        <th class="border px-4 py-2 text-left">Fraud Level</th>
+        <th class="border px-4 py-2 text-left">Reasons</th>
+      </tr>
+    </thead>
+    <tbody id="messagesTable" class="bg-white"></tbody>
+  </table>
+</div>
+
+
+  <script>
+    async function analyze() {
+      const message = document.getElementById("msg").value;
+      const res = await fetch("http://localhost:5001/api/analyze", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ message })
+      });
+      const data = await res.json();
+      document.getElementById("result").textContent = JSON.stringify(data, null, 2);
+    }
+
+    async function fetchMessages() {
+      try {
+        const res = await fetch("http://localhost:5001/api/messages");
+        if (!res.ok) throw new Error("Failed to fetch messages");
+
+        const messages = await res.json();
+        const tableBody = document.getElementById("messagesTable");
+
+        tableBody.innerHTML = ""; // Clear table
+        messages.forEach(msg => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td class="border px-4 py-2">${msg.message}</td>
+            <td class="border px-4 py-2">${msg.fraudScore || 0}</td>
+            <td class="border px-4 py-2">${msg.fraudLevel || "low"}</td>
+            <td class="border px-4 py-2">${msg.reasons ? msg.reasons.join(", ") : ""}</td>
+          `;
+          tableBody.appendChild(row);
+        });
+      } catch (err) {
+        console.error(err);
+      }
+    }
+  </script>
+</body>
+</html>
