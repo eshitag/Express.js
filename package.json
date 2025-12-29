@@ -1,16 +1,18 @@
 {
   "name": "fraud-signal-api",
   "version": "1.0.0",
-  "type" : "module",
+  "type": "module",
   "description": "backend service that analyzes incoming text-based messages (SMS, WhatsApp, email content) and flags potentially fraudulent communication.",
   "main": "server.js",
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1",
-    "start" : "node server.js"
+    "start": "node server.js"
   },
   "author": "Eshita Gupta",
   "license": "MIT",
   "dependencies": {
-    "express": "^5.2.1"
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "mongoose": "^9.0.2"
   }
 }
