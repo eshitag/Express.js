@@ -1,7 +1,31 @@
 # Fraud Signal API
 
 A Node.js + Express + MongoDB backend that analyzes text messages (SMS, WhatsApp, emails) for potential fraud. It flags messages based on common indicators like symbol substitution, urgency language, OTP requests, personal info requests, and delivery confirmations. Comes with a simple HTML + Tailwind frontend to test messages and view stored analysis results.
-
+## Project Structure
+```
+└── 📁Fraud-Detector
+    └── 📁config
+        ├── db.js
+    └── 📁frontend
+        ├── index.html
+    └── 📁middleware
+        ├── logger.js
+    └── 📁models
+        ├── Message.js
+    └── 📁routes
+        ├── analyze.js
+        ├── message.js
+    └── 📁test
+        ├── messages.md
+    └── 📁utils
+        ├── fraudRules.js
+    ├── .gitignore
+    ├── package-lock.json
+    ├── package.json
+    ├── projectDescription.txt
+    ├── README.md
+    └── server.js
+```
 # Features
 
 Detect suspicious symbol substitutions (e.g., "ver!fy" instead of "verify")
